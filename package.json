@@ -4,7 +4,7 @@
   "description": "backend",
   "main": "server.ts",
   "scripts": {
-    "start": "serverless offline start --stage local --noPrependStageInUrl",
+    "start": "serverless offline start --stage local --noPrependStageInUrl --debug * --verbose --noTimeout",
     "spec": "node -r dotenv/config node_modules/.bin/jest --runInBand --testTimeout=30000",
     "populate-app": "node_modules/.bin/ts-node helpers/populate.ts",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
@@ -36,6 +36,7 @@
     "@sentry/tracing": "^7.23.0",
     "@supercharge/promise-pool": "^2.3.2",
     "@vendia/serverless-express": "^4.10.1",
+    "axios": "^1.6.2",
     "bluebird": "^3.7.2",
     "body-parser": "^1.20.1",
     "dotenv": "^16.0.3",
@@ -46,10 +47,12 @@
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.0.0",
     "luxon": "^3.1.1",
+    "mariadb": "2.5.5",
     "mysql2": "^2.3.3",
     "rate-limiter-flexible": "^2.4.1",
     "request-ip": "^3.3.0",
     "sequelize": "^6.26.0",
+    "sequelize-cli": "^6.6.2",
     "umzug": "^3.2.1"
   },
   "devDependencies": {

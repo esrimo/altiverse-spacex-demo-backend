@@ -4,20 +4,20 @@ version: '3'
 services:
   # MySQL Database
   database:
-    platform: linux/amd64
-    image: mysql/mysql-server:5.7
+    platform: linux/x86_64
+    image: mariadb:10.3
     restart: 'no'
     ports:
       - '3306:3306'
     volumes:
       - ./mysqldata:/var/lib/mysql
-    command: --lower_case_table_names=1
+    command: --lower_case_table_names=1 --explicit_defaults_for_timestamp=1 --innodb_use_native_aio=0
     environment:
-      MYSQL_ROOT_PASSWORD: 'password'
-      MYSQL_USER: 'root'
-      MYSQL_PASSWORD: 'password'
-      MYSQL_DATABASE: 'spacex'
-      MYSQL_HOST: localhost
+      MARIADB_ROOT_PASSWORD: 'password'
+      MARIADB_USER: 'shoot'
+      MARIADB_PASSWORD: 'password'
+      MARIADB_DATABASE: 'spacex'
+      MARIADB_HOST: localhost
 
   # AWS Local
   localstack:

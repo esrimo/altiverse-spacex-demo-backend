@@ -4,7 +4,7 @@ import { shipController } from '../../../controllers';
 import { ShipAttributes } from '../../../models/ship';
 
 const ships = async (rootValue, { input }: QueryShipsArgs, context: GraphqlContext): Promise<ShipAttributes[]> => {
-  return shipController.get(input, context);
+  return shipController.get();
 };
 
 // const addShip = async (rootValue, _, context: GraphqlContext): Promise<ShipAttributes | null> => {

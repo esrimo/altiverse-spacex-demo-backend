@@ -10,6 +10,6 @@ export const Ship = gql`
   }
 
   input ShipsInput {
-    pagination: PaginationInput!
+    pagination: PaginationInput
   }
 `;

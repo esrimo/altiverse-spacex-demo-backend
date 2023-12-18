@@ -54,6 +54,10 @@ export type QueryShipsArgs = {
   input: ShipsInput;
 };
 
+export type QueryMissionArgs = {
+  shipId: Scalars['ID'];
+};
+
 
 export type QueryUserArgs = {
   input: UserInput;
