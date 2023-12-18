@@ -4,21 +4,17 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 import { ApolloServer } from '@apollo/server';
-import { config } from './config';
 import { expressMiddleware } from '@apollo/server/express4';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const serverlessExpress = require('@vendia/serverless-express');
-import * as express from 'express';
-import * as core from 'express-serve-static-core';
 import { json } from 'body-parser';
 import * as cors from 'cors';
-import { typeDefs, resolvers } from './routes/graphql';
-import { jwtController } from './controllers';
-import * as Sentry from '@sentry/serverless';
-import helmet from 'helmet';
-import { RateLimiterMiddleware } from './middlewares';
-import { sync } from './models';
+import * as express from 'express';
+import * as core from 'express-serve-static-core';
 import { CreateRoutes } from './controllers/CreateRoutes';
+import { sync } from './models';
+import { resolvers, typeDefs } from './routes/graphql';
+import { jwtController } from './controllers';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const serverlessExpress = require('@vendia/serverless-express');
 
 const getIpAddress = (request: express.Request): string | undefined => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -37,7 +33,8 @@ export const createApp = async (): Promise<core.Express> => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    introspection: config.nodeEnv !== 'production',
+    introspection: process.env.NODE_ENV !== 'production',
+    includeStacktraceInErrorResponses: process.env.NODE_ENV !== 'production',
   });
 
   server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests();
@@ -45,38 +42,66 @@ export const createApp = async (): Promise<core.Express> => {
   const app = express();
   await sync();
 
-  return new Promise((resolve, reject) => {
-    const ready = err => {
-      if (err) {
-        reject(err);
-      }
-      CreateRoutes(app);
+  CreateRoutes(app);
 
-      app.use(
-        cors(),
-        json(),
-        helmet(),
-        expressMiddleware(server, {
-          context: async ({ req, res }) => {
-            const { event, context } = serverlessExpress.getCurrentInvoke();
-            return {
-              expressRequest: req,
-              expressResponse: res,
-              lambdaEvent: event,
-              lambdaContext: context,
-              ...(await jwtController.createAuthScope(req.headers.authorization)),
-              ip: getIpAddress(req),
-              deviceUniqueIdentifier: getDeviceUniqueIdentifier(req),
-              userAgent: req.headers['user-agent'],
-            };
-          },
-        }),
-      );
-      resolve(app);
-    };
+  app.use(
+    cors(),
+    json(),
+    expressMiddleware(server, {
+      context: async ({ req, res }) => {
+        const { event, context } = serverlessExpress.getCurrentInvoke();
+        return {
+          expressRequest: req,
+          expressResponse: res,
+          lambdaEvent: event,
+          lambdaContext: context,
+          ...(await jwtController.createAuthScope(req.headers.authorization)),
+          ip: getIpAddress(req),
+          deviceUniqueIdentifier: getDeviceUniqueIdentifier(req),
+          userAgent: req.headers['user-agent'],
+        };
+      },
+    }),
+  );
 
-    app.use(new RateLimiterMiddleware(ready).middleware);
-  });
+
+  return app;
+
+  // return new Promise((resolve, reject) => {
+  //   const ready = err => {
+  //     if (err) {
+  //       reject(err);
+  //     }
+  //     CreateRoutes(app);
+
+  //     app.use(
+  //       cors(),
+  //       json(),
+  //       // helmet(),
+  //       // expressMiddleware(server, {
+  //       //   context: async ({ req, res }) => {
+  //       //     console.log(req, res);
+  //       //     const { event, context } = serverlessExpress.getCurrentInvoke();
+
+  //       //     return {
+  //       //       expressRequest: req,
+  //       //       expressResponse: res,
+  //       //       lambdaEvent: event,
+  //       //       lambdaContext: context,
+  //       //       // ...(await jwtController.createAuthScope(req.headers.authorization)),
+  //       //       ip: getIpAddress(req),
+  //       //       deviceUniqueIdentifier: getDeviceUniqueIdentifier(req),
+  //       //       userAgent: req.headers['user-agent'],
+  //       //       // callbackWaitsForEmptyEventLoop: false,
+  //       //     };
+  //       //   },
+  //       // }),
+  //     );
+  //     resolve(app);
+  //   };
+
+  //   app.use(new RateLimiterMiddleware(ready).middleware);
+  // });
 };
 
 async function setup(event, context) {
@@ -84,4 +109,5 @@ async function setup(event, context) {
   return serverlessExpress({ app })(event, context);
 }
 
-exports.handler = Sentry.AWSLambda.wrapHandler(setup);
+exports.handler = setup;
+// exports.handler = Sentry.AWSLambda.wrapHandler(setup).handler;
