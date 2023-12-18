@@ -1,9 +1,9 @@
-import { Sequelize } from 'sequelize';
+import { DataTypeAbstract, ModelAttributeColumnOptions, Sequelize } from 'sequelize';
 import { config } from '../config';
-import { DataTypeAbstract, ModelAttributeColumnOptions } from 'sequelize';
-import { User } from './User';
 import { Address } from './Address';
+import { User } from './User';
 import { Ship } from './ship';
+import { Mission } from './Mission';
 
 declare global {
   type SequelizeAttributes<T extends { [key: string]: any }> = {
@@ -13,13 +13,13 @@ declare global {
 
 const sequelize = new Sequelize({
   ...config.mysql,
-  dialect: 'mysql',
+  dialect: 'mariadb',
   define: {
     charset: 'utf8mb4',
   },
-  logging: false,
+  logging: console.log,
   pool: {
-    acquire: 30000,
+    acquire: 30,
   },
 });
 
@@ -28,7 +28,13 @@ const db = {
   User: User.initModel(sequelize),
   Address: Address.initModel(sequelize),
   Ship: Ship.initModel(sequelize),
+  Mission: Mission.initModel(sequelize),
 };
+
+db.Ship.hasOne(db.Mission, {
+  as: 'Ship',
+  foreignKey: 'shipId'
+});
 
 Object.keys(db).map(key => {
   if (db[key].associate) {
